@@ -1,12 +1,13 @@
 (ns com.fulcrologic.rad.rendering.semantic-ui.field
   (:require
-    [clojure.string :as str]
-    #?(:cljs [com.fulcrologic.fulcro.dom :refer [div label span]]
-       :clj  [com.fulcrologic.fulcro.dom-server :refer [div label span]])
-    [com.fulcrologic.rad.attributes :as attr]
-    [com.fulcrologic.fulcro.dom.html-entities :as ent]
-    [com.fulcrologic.rad.form :as form]
-    [com.fulcrologic.rad.rendering.semantic-ui.form-options :as sufo]))
+   [clojure.string :as str]
+   #?(:cljs [com.fulcrologic.fulcro.dom :refer [div label span]]
+      :clj  [com.fulcrologic.fulcro.dom-server :refer [div label span]])
+   [com.fulcrologic.rad.attributes :as attr]
+   [com.fulcrologic.rad.attributes-options :as ao]
+   [com.fulcrologic.fulcro.dom.html-entities :as ent]
+   [com.fulcrologic.rad.form :as form]
+   [com.fulcrologic.rad.rendering.semantic-ui.form-options :as sufo]))
 
 (defn render-field-factory
   "Create a general field factory using the given input factory as the function to call to draw an input."
@@ -28,8 +29,12 @@
            (div {:key     (str qualified-key)
                  :classes [(or top-class "ui field") (when invalid? "error")]}
              (when-not omit-label?
-               (label
-                 (or field-label (some-> qualified-key name str/capitalize))
+               (label 
+                (let [required? (ao/required? attribute)
+                      old-label (or field-label (some-> qualified-key name str/capitalize))]
+                  (if required?
+                    (str old-label ent/nbsp "*")
+                    old-label)) 
                  (when invalid? (if (string? validation-message)
                                   (str ent/nbsp "(" validation-message ")")
                                   validation-message))))

@@ -26,3 +26,5 @@ docs/assets
 docs/.asciidoctor
 pom.xml.releaseBackup
 release.properties
+.clj-kondo
+.lsp
