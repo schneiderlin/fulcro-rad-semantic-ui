@@ -250,43 +250,44 @@
         has-row-actions?        (seq row-actions)
         sui-header-class        (suo/get-rendering-options report-instance suo/report-table-header-class)
         sui-table-class         (?! (suo/get-rendering-options report-instance suo/report-table-class) report-instance)]
-    (dom/table {:className (or sui-table-class "ui selectable table") :classes [table-class]}
-      (dom/thead
-        (dom/tr
-          (map-indexed (fn [idx {:keys [label help column]}]
-                         (let [alignment-class (column-alignment-class report-instance column)]
-                           (dom/th {:key     idx
-                                    :classes [alignment-class (?! sui-header-class report-instance idx)]}
-                             (if (sortable? column)
-                               (dom/a {:onClick (fn [evt]
-                                                  (evt/stop-propagation! evt)
-                                                  (report/sort-rows! report-instance column))}
-                                 label
-                                 (when (= sorting-by (::attr/qualified-key column))
-                                   (if ascending?
-                                     (dom/i :.angle.down.icon)
-                                     (dom/i :.angle.up.icon))))
-                               label)
-                             #?(:cljs
-                                (when help
-                                  (ui-popup {:trigger (dom/i :.ui.circle.info.icon)}
-                                    (ui-popup-content {}
-                                      help)))))))
-            column-headings)
-          (when has-row-actions? (dom/th {:classes [(or
-                                                      (?! sui-header-class report-instance (count column-headings))
-                                                      "collapsing")]} ""))))
-      (when (seq rows)
-        (dom/tbody
-          (map-indexed
-            (fn [idx row]
-              (let [highlighted-row-idx (report/currently-selected-row report-instance)]
-                (render-report-body-item row (merge query-inclusion-props
-                                               {:report-instance report-instance
-                                                :row-class       BodyItem
-                                                :highlighted?    (= idx highlighted-row-idx)
-                                                ::report/idx     idx}))))
-            rows))))))
+    (dom/table
+     {:className (or sui-table-class "ui selectable table") :classes [table-class]}
+     (dom/thead
+      (dom/tr
+       (map-indexed (fn [idx {:keys [label help column]}]
+                      (let [alignment-class (column-alignment-class report-instance column)]
+                        (dom/th {:key     idx
+                                 :classes [alignment-class (?! sui-header-class report-instance idx)]}
+                                (if (sortable? column)
+                                  (dom/a {:onClick (fn [evt]
+                                                     (evt/stop-propagation! evt)
+                                                     (report/sort-rows! report-instance column))}
+                                         label
+                                         (when (= sorting-by (::attr/qualified-key column))
+                                           (if ascending?
+                                             (dom/i :.angle.down.icon)
+                                             (dom/i :.angle.up.icon))))
+                                  label)
+                                #?(:cljs
+                                   (when help
+                                     (ui-popup {:trigger (dom/i :.ui.circle.info.icon)}
+                                               (ui-popup-content {}
+                                                                 help)))))))
+                    column-headings)
+       (when has-row-actions? (dom/th {:classes [(or
+                                                  (?! sui-header-class report-instance (count column-headings))
+                                                  "collapsing")]} ""))))
+     (when (seq rows)
+       (dom/tbody
+        (map-indexed
+         (fn [idx row]
+           (let [highlighted-row-idx (report/currently-selected-row report-instance)]
+             (render-report-body-item row (merge query-inclusion-props
+                                                 {:report-instance report-instance
+                                                  :row-class       BodyItem
+                                                  :highlighted?    (= idx highlighted-row-idx)
+                                                  ::report/idx     idx}))))
+         rows))))))
 
 (defn render-rotated-table [_ {:keys [report-instance] :as env}]
   (let [{report-column-headings ::report/column-headings
