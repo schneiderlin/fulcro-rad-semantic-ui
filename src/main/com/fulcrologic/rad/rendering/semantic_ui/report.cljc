@@ -217,6 +217,12 @@
   (defn render-list-report-layout [report-instance]
     (ui-list-report-layout {:report-instance report-instance})))
 
+(defn hide-columns
+  "Returns the current hide columns of the report
+   columns 是一个 set of qualified-key, 需要隐藏的那些 columns. 默认是 #{}, 不隐藏"
+  ([report-instance]
+   (get-in (comp/props report-instance) [:ui/parameters ::columns] #{:position-category/label})))
+
 (defn render-standard-table [this {:keys [report-instance]}]
   (let [{report-column-headings ::report/column-headings
          report-column-infos    ::report/column-infos
@@ -249,9 +255,19 @@
         sorting-by              (and sortable? (:sort-by sort-params))
         has-row-actions?        (seq row-actions)
         sui-header-class        (suo/get-rendering-options report-instance suo/report-table-header-class)
-        sui-table-class         (?! (suo/get-rendering-options report-instance suo/report-table-class) report-instance)]
+        sui-table-class         (?! (suo/get-rendering-options report-instance suo/report-table-class) report-instance)
+        hide-columns            (hide-columns report-instance)]
     (dom/table
      {:className (or sui-table-class "ui selectable table") :classes [table-class]}
+     (log/info "hide-columns" hide-columns)
+     (dom/colgroup
+      (map (fn [{:keys [column]}]
+             (let [{::attr/keys [qualified-key]} column] 
+               (dom/col {:key qualified-key
+                         :style {:visibility (if (contains? hide-columns qualified-key)
+                                               "collapse"
+                                               "")}}))) 
+           column-headings))
      (dom/thead
       (dom/tr
        (map-indexed (fn [idx {:keys [label help column]}]
